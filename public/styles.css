@@ -1,0 +1,28 @@
+body{ margin:0; background:#0f1116; color:#e3e7ee; font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;}
+.topbar{ display:flex; justify-content:space-between; align-items:center; padding:12px 16px; background:#141823; border-bottom:1px solid #232a3a; position:sticky; top:0; z-index:10; }
+.brand{ font-weight:800; letter-spacing:.5px; }
+.btn{ background:#1f2636; color:#e3e7ee; border:1px solid #2b3550; border-radius:10px; padding:10px 14px; cursor:pointer;}
+.card{ max-width:1000px; margin:16px auto; background:#151a22; border:1px solid #242b3a; border-radius:14px; padding:16px; }
+#lobbyList .row{ display:flex; justify-content:space-between; align-items:center; padding:10px; border:1px solid #2b3550; border-radius:10px; margin:8px 0;}
+
+.table-wrap{ max-width:1100px; margin:16px auto; }
+.hud{ display:flex; gap:12px; flex-wrap:wrap; margin-bottom:10px; }
+.board{ letter-spacing:4px; font-size:20px; }
+.hole{ letter-spacing:4px; font-size:18px; margin-top:8px; }
+
+.table-rail{ position:relative; height:520px; background:radial-gradient(ellipse at center,#1a1f2d 0%,#0e121b 70%,#0b0f16 100%); border-radius:260px; border:2px solid #2b3147; box-shadow: inset 0 0 20px rgba(0,0,0,.6), 0 10px 30px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+.table-felt{ width:86%; height:65%; background:radial-gradient(circle at 50% 40%, #1e8a4b 0%, #146e3b 60%, #0f5a31 100%); border-radius:220px; border:6px solid #3a9a58; position:relative; display:flex; align-items:center; justify-content:center; }
+.table-title{ position:absolute; top:18px; font-weight:800; letter-spacing:2px; opacity:.9; }
+.community{ position:absolute; top:44%; transform:translateY(-50%); display:flex; gap:10px; }
+.pot{ position:absolute; top:58%; transform:translateY(-50%); background:#0e121b; border:1px solid #2b3550; padding:4px 10px; border-radius:999px; font-weight:700; }
+
+#seats{ position:relative; margin-top:-480px; height:520px; pointer-events:none; }
+.seat{ position:absolute; width:220px; pointer-events:auto; }
+.seat .box{ background:#141a26; border:1px solid #2b3550; border-radius:12px; padding:8px 10px; }
+.seat .top{ display:flex; justify-content:space-between; }
+.seat .name{ font-weight:700; }
+.seat .stack{ opacity:.9; }
+.seat.active .box{ outline:2px solid #2a6df1; }
+.seat.folded{ opacity:.7; }
+
+.controls{ display:flex; gap:10px; flex-wrap:wrap; margin-top:10px; }
