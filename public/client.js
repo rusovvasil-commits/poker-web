@@ -1,98 +1,119 @@
+/* ==== Socket & UI refs ==== */
 const socket = io();
 let currentTable = null;
 let myName = 'Player ' + Math.floor(Math.random()*10000);
-let timerInt = null;
 
-const vLobby = document.getElementById('view-lobby');
-const vTable = document.getElementById('view-table');
-const lobbyList = document.getElementById('lobbyList');
+const vLobby   = document.getElementById('view-lobby');
+const vTable   = document.getElementById('view-table');
+const lobbyEl  = document.getElementById('lobbyList');
+const boardEl  = document.getElementById('board');
+const holeEl   = document.getElementById('hole');
 
+/* Кнопки */
 document.getElementById('btnLobby').onclick = showLobby;
-document.getElementById('btnNew').onclick = ()=> socket.emit('new_hand');
-document.getElementById('btnBack').onclick = showLobby;
-document.getElementById('btnFold').onclick = ()=> socket.emit('action',{type:'fold'});
-document.getElementById('btnCC').onclick = ()=> socket.emit('action',{type:'check_call'});
-document.getElementById('btnBet').onclick = ()=> socket.emit('action',{type:'bet'});
-document.getElementById('btnHole').onclick = ()=> socket.emit('get_hole');
+document.getElementById('btnNew').onclick   = () => socket.emit('new_hand');
+document.getElementById('btnFold').onclick  = () => socket.emit('action',{ type:'fold' });
+document.getElementById('btnCC').onclick    = () => socket.emit('action',{ type:'check_call' });
+document.getElementById('btnBet').onclick   = () => socket.emit('action',{ type:'bet', amt:10 });
+document.getElementById('btnHole').onclick  = () => socket.emit('get_hole');
 
+/* ==== Cards rendering ==== */
+function svgCard({r,s}) {
+  // r: 'A','K','Q','J','T','9'... ; s: 'c','d','h','s'
+  const suitSymbol = { c:'♣', d:'♦', h:'♥', s:'♠' }[s];
+  const col = (s==='d'||s==='h') ? '#cc2e2e' : '#1a1a1a';
+
+  // 80x120 viewBox під розміри .pkr-card
+  return `
+<svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg" aria-label="${r}${s}">
+  <rect x="3" y="3" width="194" height="294" rx="16" ry="16" fill="#fff" stroke="rgba(0,0,0,.25)"/>
+  <!-- кути -->
+  <g fill="${col}" font-family="system-ui,Segoe UI,Roboto,Arial" font-weight="700">
+    <text x="16" y="36" font-size="30">${r}${suitSymbol}</text>
+    <g transform="rotate(180 100 150)">
+      <text x="16" y="36" font-size="30">${r}${suitSymbol}</text>
+    </g>
+  </g>
+  <!-- велика масть по центру -->
+  <text x="100" y="175" text-anchor="middle" fill="${col}" font-family="system-ui,Segoe UI,Roboto,Arial" font-size="96" opacity=".10">${suitSymbol}</text>
+</svg>`;
+}
+
+function createCardEl(card, hidden=false){
+  const wrap = document.createElement('div');
+  wrap.className = 'pkr-card';
+  if (hidden) {
+    wrap.classList.add('back');
+    wrap.innerHTML = ''; // рубашка без лицьової сторони
+  } else {
+    wrap.classList.remove('back');
+    wrap.innerHTML = svgCard(card);
+  }
+  return wrap;
+}
+
+function renderCards(containerEl, cards, {hidden=false} = {}){
+  containerEl.innerHTML = '';
+  (cards||[]).forEach(c => containerEl.appendChild(createCardEl(c, hidden)));
+}
+
+/* ==== Views ==== */
 function showLobby(){
-  vLobby.style.display='block'; vTable.style.display='none';
-  fetch('/api/lobby').then(r=>r.json()).then(rows=>{
-    lobbyList.innerHTML='';
-    rows.forEach(r=>{
-      const el = document.createElement('div');
-      el.className='row';
-      el.innerHTML = `<div>${r.name} — ${r.players}/${r.seats} — ${r.state}</div>
-                      <button class="btn">Зайти</button>`;
-      el.querySelector('button').onclick = ()=> joinTable(r.id);
-      lobbyList.appendChild(el);
-    });
+  vLobby.style.display='block';
+  vTable.style.display='none';
+  socket.emit('leave_table', { tableId: currentTable });
+  currentTable = null;
+}
+
+function showTable(){
+  vLobby.style.display='none';
+  vTable.style.display='block';
+}
+
+/* ==== Lobby & Table state ==== */
+function renderLobby(tables){
+  lobbyEl.innerHTML = '';
+  tables.forEach(t=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `
+      <div>3-max BB${t.bb} — ${t.players.length}/${t.seats}</div>
+      <button class="btn">Зайти</button>`;
+    row.querySelector('button').onclick = ()=>{
+      currentTable = t.id;
+      socket.emit('join_table',{ tableId:t.id, name: myName });
+    };
+    lobbyEl.appendChild(row);
   });
 }
-function joinTable(tableId){
-  currentTable = tableId;
-  socket.emit('join_table', {tableId, name: myName});
-  vLobby.style.display='none'; vTable.style.display='block';
-  document.getElementById('myHole').innerText='';
+
+function applyTableState(state){
+  // Борд (карти на столі)
+  renderCards(boardEl, state.board, { hidden:false });
+
+  // Мої карти
+  const me = state.players.find(p=>p.id===state.meId);
+  const myHole = me?.hole || [];
+  renderCards(holeEl, myHole, { hidden:false });
 }
-socket.on('connect', showLobby);
-socket.on('error_msg', msg=> alert(msg));
 
-socket.on('table_state', t=>{
-  if (!currentTable || currentTable!==t.id) return;
-  document.getElementById('pot').innerText = t.pot;
-  document.getElementById('stage').innerText = t.state;
-  document.getElementById('houseRake').innerText = t.houseRake;
-  document.getElementById('board').innerText = t.board.join(' ');
-  renderSeats(t);
-  renderCommunity(t);
+/* ==== Socket events ==== */
+socket.on('lobby', data => renderLobby(data.tables||[]));
 
-  if (timerInt) clearInterval(timerInt);
-  timerInt = setInterval(()=>{
-    const left = Math.max(0, Math.floor((t.turnEndsAt - Date.now())/1000));
-    document.getElementById('timer').innerText = t.currentIdx>=0 ? left : '--';
-  }, 250);
+socket.on('table_state', state=>{
+  currentTable = state.tableId;
+  showTable();
+  applyTableState(state);
 });
 
-socket.on('hole_cards', cards=>{
-  document.getElementById('myHole').innerText = 'Мої карти: ' + cards.join(' ');
+// інші повідомлення (оновлення борду/руки)
+socket.on('board', cards => renderCards(boardEl, cards, {hidden:false}));
+socket.on('hole',  cards => renderCards(holeEl,  cards, {hidden:false}));
+
+/* на старті просимо лобі */
+socket.emit('get_lobby');
+
+/* безпека: при закритті вкладки — залишаємо стіл */
+window.addEventListener('beforeunload',()=>{
+  if (currentTable) socket.emit('leave_table',{ tableId: currentTable });
 });
-
-function renderCommunity(t){
-  document.getElementById('potChips').textContent = t.pot;
-  const comm = document.getElementById('community'); comm.innerHTML='';
-  t.board.forEach(c=>{
-    const d=document.createElement('div');
-    d.textContent=c; d.style.padding='6px 8px'; d.style.background='#0e121b'; d.style.border='1px solid #2b3550'; d.style.borderRadius='8px';
-    comm.appendChild(d);
-  });
-}
-
-function renderSeats(t){
-  const seats = document.getElementById('seats'); seats.innerHTML='';
-  const pos3 = [
-    { left:'calc(50% - 110px)', top:'430px' },
-    { left:'80px', top:'70px' },
-    { right:'80px', top:'70px' },
-  ];
-  const pos6 = [
-    { left:'calc(50% - 110px)', top:'430px' },
-    { left:'60px', top:'300px' },
-    { right:'60px', top:'300px' },
-    { left:'140px', top:'60px' },
-    { right:'140px', top:'60px' },
-    { left:'calc(50% - 110px)', top:'20px' },
-  ];
-  const arr = t.seats===3 ? pos3 : pos6;
-  t.players.forEach((p, idx)=>{
-    const d=document.createElement('div');
-    d.className='seat' + (idx===t.currentIdx?' active':'') + (p.folded?' folded':'');
-    const pos=arr[idx] || { left:(40+idx*150)+'px', top:'420px' };
-    Object.assign(d.style, pos);
-    d.innerHTML = `<div class="box">
-      <div class="top"><div class="name">${p.name}</div><div class="stack">Stack: ${p.stack}</div></div>
-      <div>Bet: ${p.bet}${idx===t.dealerBtn?' • (D)':''}</div>
-    </div>`;
-    seats.appendChild(d);
-  });
-}
