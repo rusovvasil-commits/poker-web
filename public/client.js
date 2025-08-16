@@ -96,6 +96,17 @@ function applyTableState(state){
   const myHole = me?.hole || [];
   renderCards(holeEl, myHole, { hidden:false });
 }
+function renderCards(root, cards, { hidden = false } = {}) {
+  root.innerHTML = '';
+  if (!cards || !cards.length) return;
+
+  for (const code of cards) {
+    const slot = document.createElement('div');
+    slot.className = 'pkr-card';
+    slot.innerHTML = hidden ? '' : renderCard(code); // renderCard ти вже додав нижче
+    root.appendChild(slot);
+  }
+}
 
 /* ==== Socket events ==== */
 socket.on('lobby', data => renderLobby(data.tables||[]));
@@ -116,4 +127,16 @@ socket.emit('get_lobby');
 /* безпека: при закритті вкладки — залишаємо стіл */
 window.addEventListener('beforeunload',()=>{
   if (currentTable) socket.emit('leave_table',{ tableId: currentTable });
-});
+});// ==== Картинки карт ====
+const rankMap = {
+  'A': 'ace', 'K': 'king', 'Q': 'queen', 'J': 'jack',
+  'T': '10', '9':'9','8':'8','7':'7','6':'6','5':'5','4':'4','3':'3','2':'2'
+};
+const suitMap = { 's': 'spades', 'h': 'hearts', 'd': 'diamonds', 'c': 'clubs' };
+
+function renderCard(code){
+  const r = rankMap[code[0]];
+  const s = suitMap[code[1]];
+  return `<img src="/imgs/${r}_of_${s}.svg" alt="${r} of ${s}" style="width:60px;height:auto;">`;
+}
+
