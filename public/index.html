@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poker Fishka — Quickstart</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="topbar">
+    <div class="brand">POKER FISHKA</div>
+    <div class="actions">
+      <button class="btn" id="btnLobby">Лобі</button>
+    </div>
+  </div>
+
+  <div id="view-lobby" class="card">
+    <h2>Лобі — столи</h2>
+    <div id="lobbyList"></div>
+  </div>
+
+  <div id="view-table" class="table-wrap" style="display:none">
+    <div class="hud">
+      <div>Pot: <span id="pot">0</span></div>
+      <div>Стадія: <span id="stage">waiting</span></div>
+      <div>Таймер: <span id="timer">--</span>s</div>
+      <div>Rake: <span id="houseRake">0</span></div>
+      <div>Борт: <span id="board" class="board"></span></div>
+    </div>
+    <div class="table-rail">
+      <div class="table-felt">
+        <div class="table-title">POKER FISHKA</div>
+        <div id="community" class="community"></div>
+        <div id="potChips" class="pot">0</div>
+      </div>
+    </div>
+    <div id="seats"></div>
+    <div class="controls">
+      <button class="btn" id="btnNew">Нова роздача</button>
+      <button class="btn" id="btnBack">До лобі</button>
+      <button class="btn" id="btnFold">Fold</button>
+      <button class="btn" id="btnCC">Check/Call</button>
+      <button class="btn" id="btnBet">Bet +10</button>
+      <button class="btn" id="btnHole">Мої карти</button>
+    </div>
+    <div id="myHole" class="hole"></div>
+  </div>
+
+  <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+  <script type="module" src="/client.js"></script>
+</body>
+</html>
