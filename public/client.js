@@ -49,7 +49,8 @@ socket.on('table_state', t=>{
   cardsContainer.innerHTML = '';  // очищаємо контейнер перед додаванням нових карт
   cards.forEach(card => {
     const cardImg = document.createElement('img');
-    cardImg.src = `/public/cards/${card}.jpg`;  // Шлях до карт
+    cardImg.src = '/cards/' + card + '.jpg';
+  // Шлях до карт
     cardImg.alt = card;  // Опис картки для доступності
     cardsContainer.appendChild(cardImg);
   });
