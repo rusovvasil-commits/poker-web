@@ -65,7 +65,8 @@ socket.on('table_state', t=>{
   }, 250);
 });
 
-socket.on('hole_cards', cards=>{
+socket.on('hole_cards', cards=>{renderCards(cards);
+
   document.getElementById('myHole').innerText = 'Мої карти: ' + cards.join(' ');
 });
 
