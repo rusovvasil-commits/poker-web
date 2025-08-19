@@ -44,7 +44,17 @@ socket.on('table_state', t=>{
   document.getElementById('stage').innerText = t.state;
   document.getElementById('houseRake').innerText = t.houseRake;
   document.getElementById('board').innerText = t.board.join(' ');
-  renderSeats(t);
+  renderSeats(t);function renderCards(cards) {
+  const cardsContainer = document.getElementById('cards-container');
+  cardsContainer.innerHTML = '';  // очищаємо контейнер перед додаванням нових карт
+  cards.forEach(card => {
+    const cardImg = document.createElement('img');
+    cardImg.src = `/public/cards/${card}.jpg`;  // Шлях до карт
+    cardImg.alt = card;  // Опис картки для доступності
+    cardsContainer.appendChild(cardImg);
+  });
+}
+
   renderCommunity(t);
 
   if (timerInt) clearInterval(timerInt);
